@@ -22,20 +22,20 @@ var availableTime = 300;
 var interval = null;
 
 function tick() {
-	if(availableTime > 0) { 
-		--availableTime;
-		var mm = Math.floor(availableTime / 60);
-		var ss = availableTime % 60;
-		var at = (mm < 10 ? '0' : '') + mm + ':' + (ss < 10 ? '0' : '') + ss;
-		document.getElementById('availableTime').innerHTML = '<b>' + at + '</b>';
-	} else {
-		if(interval) clearInterval(interval);
-		
-		alert('Game ended! No time left!');
-		if (confirm('Do you want to play another game?')) {
-			startNewGame();
-		}
-	}
+    if (availableTime > 0) {
+        --availableTime;
+        var mm = Math.floor(availableTime / 60);
+        var ss = availableTime % 60;
+        var at = (mm < 10 ? '0' : '') + mm + ':' + (ss < 10 ? '0' : '') + ss;
+        document.getElementById('availableTime').innerHTML = '<b>' + at + '</b>';
+    } else {
+        if (interval) clearInterval(interval);
+
+        alert('Game ended! No time left!');
+        if (confirm('Do you want to play another game?')) {
+            startNewGame();
+        }
+    }
 }
 
 function init() {
@@ -43,31 +43,32 @@ function init() {
     canvas.width = width;
     canvas.height = height;
     score = 0;
-    colors = [];
-    colors.push("rgb(200,0,0)");
-    colors.push("rgb(0,200,0)");
-    colors.push("rgb(0,0,200)");
-    colors.push("rgb(200,200,0)");
-    colors.push("rgb(200,0,200)");
+    colors = [
+        "rgb(200,0,0)",
+        "rgb(0,200,0)",
+        "rgb(0,0,200)",
+        "rgb(200,200,0)",
+        "rgb(200,0,200)"
+    ];
     circles = [];
     for (var i = 0; i < width; i += step) {
         a = [];
         for (var j = 0; j < height; j += step) {
-            var c = {};
-            c.x = i + radius;
-            c.y = j + radius;
-            c.selected = false;
-            c.destroyed = false;
-            var idx = Math.floor(colors.length * Math.random());
-            c.color = colors[idx];
+            var c = {
+                x: i + radius,
+                y: j + radius,
+                selected: false,
+                destroyed: false,
+                color: colors[Math.floor(Math.random() * colors.length)]
+            };
             a.push(c);
         }
         //console.log(a.length);
         circles.push(a);
     }
-    
+
     availableTime = 180;
-    
+
     interval = setInterval(tick, 1000);
 
     //offsetX = canvas.offsetLeft;
@@ -119,7 +120,7 @@ function update() {
 }
 
 function playExplositionSound() {
-    //document.getElementById("soundPlayer").innerHTML = '<embed src="sounds/explosion.mp3" hidden="true" autostart="true" loop="false" />';
+    new Audio("sounds/explosion.mp3").play();
 }
 
 function onMouseClick(event) {
@@ -143,8 +144,7 @@ function onMouseClick(event) {
                     ii = i;
                     jj = j;
                     break;
-                }
-                else {
+                } else {
                     c = null;
                     //console.log(d);
                 }
@@ -155,8 +155,7 @@ function onMouseClick(event) {
     if (ii != -1) c = circles[ii][jj];
     else c = null;
     if (c) {
-        if (c.destroyed) {}
-        else if (c.selected) {
+        if (c.destroyed) {} else if (c.selected) {
             var count = 0;
             for (var i = 0; i < circles.length; ++i) {
                 for (var j = 0; j < circles[i].length; ++j) {
@@ -171,7 +170,7 @@ function onMouseClick(event) {
                     for (var j = 0; j < circles[i].length; ++j) {
                         if (circles[i][j].selected) {
                             circles[i][j].destroyed = true;
-							circles[i][j].selected = false;
+                            circles[i][j].selected = false;
                         }
                     }
                 }
@@ -181,8 +180,7 @@ function onMouseClick(event) {
 
                 playExplositionSound();
             }
-        }
-        else {
+        } else {
             for (var i = 0; i < circles.length; ++i) {
                 for (var j = 0; j < circles[i].length; ++j) {
                     circles[i][j].selected = false;
@@ -211,31 +209,30 @@ function onMouseClick(event) {
         draw();
         //console.log([ii, jj]);
 
-		var endGame = true;
-		for (var i = 0; i < circles.length && endGame; ++i) {
-			for (var j = 0; j < circles[i].length; ++j) {
-				if (!circles[i][j].destroyed) {
-					for (var k = 0; k < neighbours.length; ++k) {
-						var xx = i + neighbours[k][0];
-						var yy = j + neighbours[k][1];
-						if (xx >= 0 && xx < circles.length && yy >= 0 && yy < circles[xx].length && !circles[xx][yy].destroyed && circles[xx][yy].color == circles[i][j].color) {
-							endGame = false;
-							break;
-						}
-					}
-				}
-			}
-		}
+        var endGame = true;
+        for (var i = 0; i < circles.length && endGame; ++i) {
+            for (var j = 0; j < circles[i].length; ++j) {
+                if (!circles[i][j].destroyed) {
+                    for (var k = 0; k < neighbours.length; ++k) {
+                        var xx = i + neighbours[k][0];
+                        var yy = j + neighbours[k][1];
+                        if (xx >= 0 && xx < circles.length && yy >= 0 && yy < circles[xx].length && !circles[xx][yy].destroyed && circles[xx][yy].color == circles[i][j].color) {
+                            endGame = false;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
 
-		if (endGame) {
-			if(interval) clearInterval(interval);
-			alert('Game ended! No move left!');
-			if (confirm('Do you want to play another game?')) {
-				startNewGame();
-			}
-		}
-    }
-    else {
+        if (endGame) {
+            if (interval) clearInterval(interval);
+            alert('Game ended! No move left!');
+            if (confirm('Do you want to play another game?')) {
+                startNewGame();
+            }
+        }
+    } else {
         //alert('clicking in an empty area!');
     }
 }
@@ -260,8 +257,7 @@ function draw() {
             }
         }
         canvas.addEventListener("mousedown", onMouseClick, false);
-    }
-    else {
+    } else {
         alert('Can\'t get the 2d context!');
     }
 }
