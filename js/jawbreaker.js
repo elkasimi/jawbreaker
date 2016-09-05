@@ -18,10 +18,66 @@ var neighbours = [
 ];
 
 var availableTime = 300;
-
+var animationFrames = 0;
+var animating = false;
+var animationInterval = null;
 var interval = null;
 
+/*TODO specify 2 arrays: all balls, selected balls
+var allCercles = null;
+var selectedCircles = null;
+*/
+
+function animate() {
+    ++animationFrames;
+    if (animationFrames == 256) {
+        animationFrames = 0;
+        clearInterval(animationInterval);
+        animationInterval = null;
+        var count = 0;
+        for (var i = 0; i < circles.length; ++i) {
+            for (var j = 0; j < circles[i].length; ++j) {
+                if (circles[i][j].selected) {
+                    circles[i][j].destroyed = true;
+                    circles[i][j].selected = false;
+                    ++count;
+                }
+            }
+        }
+
+        score += Math.pow(2.0, count);
+        document.getElementById('score').innerHTML = '<b>Score : ' + score + '</b>';
+        animating = false;
+        playExplositionSound();
+        update();
+        draw();
+    } else {
+        var ctx = canvas.getContext('2d');
+        ctx.fillStyle = 'white';
+        ctx.fillRect(0, 0, width, height);
+        for (var i = 0; i < circles.length; ++i) {
+            for (var j = 0; j < circles[i].length; ++j) {
+                var c = circles[i][j];
+                if (c.destroyed) continue;
+                if (c.selected) {
+                    ctx.fillStyle = "rgb(255, " + animationFrames + ", " + animationFrames + ")";
+                    ctx.beginPath();
+                    ctx.arc(c.x, c.y, radius, 0, 2 * Math.PI, false);
+                    ctx.fill();
+                } else {
+                    ctx.fillStyle = c.color;
+                    ctx.beginPath();
+                    ctx.arc(c.x, c.y, radius, 0, 2 * Math.PI, false);
+                    ctx.fill();
+                }
+            }
+        }
+    }
+}
+
 function tick() {
+    if (animating) return;
+
     if (availableTime > 0) {
         --availableTime;
         var mm = Math.floor(availableTime / 60);
@@ -54,14 +110,13 @@ function init() {
     for (var i = 0; i < width; i += step) {
         a = [];
         for (var j = 0; j < height; j += step) {
-            var c = {
+            a.push({
                 x: i + radius,
                 y: j + radius,
                 selected: false,
                 destroyed: false,
                 color: colors[Math.floor(Math.random() * colors.length)]
-            };
-            a.push(c);
+            });
         }
         //console.log(a.length);
         circles.push(a);
@@ -74,6 +129,11 @@ function init() {
     //offsetX = canvas.offsetLeft;
     //offsetY = canvas.offsetTop;
     //alert('len = ' + circles.length);
+    
+    /*
+    allCircles = [];
+    selectedCircles = [];
+    */
 }
 
 function swap(c1, c2) {
@@ -166,19 +226,8 @@ function onMouseClick(event) {
             }
 
             if (count > 1) {
-                for (var i = 0; i < circles.length; ++i) {
-                    for (var j = 0; j < circles[i].length; ++j) {
-                        if (circles[i][j].selected) {
-                            circles[i][j].destroyed = true;
-                            circles[i][j].selected = false;
-                        }
-                    }
-                }
-
-                score += count * (count - 1);
-                document.getElementById('score').innerHTML = '<b>Score : ' + score + '</b>';
-
-                playExplositionSound();
+                animating = true;
+                animationInterval = setInterval(animate, 1);
             }
         } else {
             for (var i = 0; i < circles.length; ++i) {
